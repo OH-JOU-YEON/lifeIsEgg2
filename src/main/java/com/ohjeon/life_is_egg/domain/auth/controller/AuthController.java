@@ -1,7 +1,10 @@
 package com.ohjeon.life_is_egg.domain.auth.controller;
 
+import com.ohjeon.life_is_egg.domain.auth.dto.LoginRequest;
+import com.ohjeon.life_is_egg.domain.auth.dto.LoginResponse;
 import com.ohjeon.life_is_egg.domain.auth.dto.SignupRequest;
 import com.ohjeon.life_is_egg.domain.auth.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,5 +24,10 @@ public class AuthController {
     public ResponseEntity<Void> signup(@RequestBody SignupRequest request) {
         authService.signup(request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
+        return ResponseEntity.ok(authService.login(request));
     }
 }

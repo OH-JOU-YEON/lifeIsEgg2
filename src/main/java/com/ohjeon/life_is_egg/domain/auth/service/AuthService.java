@@ -1,8 +1,11 @@
 package com.ohjeon.life_is_egg.domain.auth.service;
 
+import com.ohjeon.life_is_egg.domain.auth.dto.LoginRequest;
+import com.ohjeon.life_is_egg.domain.auth.dto.LoginResponse;
 import com.ohjeon.life_is_egg.domain.auth.dto.SignupRequest;
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
+import com.ohjeon.life_is_egg.global.jwt.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -13,6 +16,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     public void signup(SignupRequest request) {
         // 1. 이메일 중복 체크
@@ -29,5 +33,20 @@ public class AuthService {
 
         // 3. 저장
         userRepository.save(user);
+    }
+
+    public LoginResponse login(LoginRequest request) {
+        // 1. 이메일로 유저 조회
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 이메일입니다."));
+
+        // 2. 비밀번호 검증
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 3. JWT 발급
+        String token = jwtUtil.generateToken(user.getId());
+        return new LoginResponse(token);
     }
 }

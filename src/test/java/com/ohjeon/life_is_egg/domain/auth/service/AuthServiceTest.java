@@ -1,6 +1,8 @@
 package com.ohjeon.life_is_egg.domain.auth.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.ohjeon.life_is_egg.domain.auth.dto.LoginRequest;
 import com.ohjeon.life_is_egg.domain.auth.dto.LoginResponse;
@@ -23,7 +25,7 @@ class AuthServiceTest {
 
     @Test
     void 회원가입_성공() {
-        SignupRequest request = new SignupRequest("test@test2.com", "password1234", "테스터2");
+        SignupRequest request = new SignupRequest("test@test2.com", "password1234", "테스터2", null);
         authService.signup(request);
 
         assertTrue(userRepository.existsByEmail("test@test2.com"));
@@ -31,7 +33,7 @@ class AuthServiceTest {
 
     @Test
     void 이메일_중복_회원가입_실패() {
-        SignupRequest request = new SignupRequest("test@test2.com", "password1234", "테스터2");
+        SignupRequest request = new SignupRequest("test@test2.com", "password1234", "테스터2", null);
         authService.signup(request);
 
         assertThrows(IllegalArgumentException.class, () -> authService.signup(request));
@@ -41,7 +43,7 @@ class AuthServiceTest {
     @Test
     void 로그인_성공() {
         // 회원가입 먼저
-        authService.signup(new SignupRequest("login@test.com", "password1234", "로그인테스터"));
+        authService.signup(new SignupRequest("login@test.com", "password1234", "로그인테스터", null));
 
         // 로그인
         LoginRequest request = new LoginRequest("login@test.com", "password1234");
@@ -52,7 +54,7 @@ class AuthServiceTest {
 
     @Test
     void 비밀번호_불일치_로그인_실패() {
-        authService.signup(new SignupRequest("login@test.com", "password1234", "로그인테스터"));
+        authService.signup(new SignupRequest("login@test.com", "password1234", "로그인테스터", null));
 
         LoginRequest request = new LoginRequest("login@test.com", "wrongpassword");
 

@@ -29,6 +29,7 @@ public class AuthService {
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .nickname(request.getNickname())
+                .age(request.getAge())
                 .build();
 
         // 3. 저장

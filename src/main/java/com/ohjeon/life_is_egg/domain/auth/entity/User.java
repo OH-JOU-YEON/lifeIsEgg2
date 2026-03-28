@@ -36,6 +36,9 @@ public class User {
     @Column(nullable = false)
     private String nickname;
 
+    @Column
+    private Byte age;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -44,9 +47,10 @@ public class User {
     private LocalDateTime updatedAt;
 
     @Builder
-    public User(String email, String password, String nickname) {
+    public User(String email, String password, String nickname, Byte age) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
+        this.age = age;
     }
 }

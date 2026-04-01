@@ -1,5 +1,6 @@
 package com.ohjeon.life_is_egg.domain.cheer.service;
 
+import com.ohjeon.life_is_egg.domain.alarm.service.AlarmService;
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
 import com.ohjeon.life_is_egg.domain.cheer.dto.CheerCreateRequest;
@@ -22,6 +23,7 @@ public class CheerService {
     private final CheerRepository cheerRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final AlarmService alarmService;
 
     // 응원 목록 조회 (트리 구조)
     public List<CheerResponse> getCheers(String postUuid) {
@@ -77,6 +79,8 @@ public class CheerService {
                 .build();
 
         cheerRepository.save(cheer);
+
+        alarmService.createCheerAlarm(post.getUser(), post, cheer);
     }
 
     // 응원 삭제

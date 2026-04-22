@@ -2,6 +2,7 @@ package com.ohjeon.life_is_egg.domain.post.repository;
 
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.post.entity.Post;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -17,8 +18,9 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     // 내 일기 목록 (최신순, soft delete 제외)
     Page<Post> findByUserAndDeletedFalseOrderByCreatedAtDesc(User user, Pageable pageable);
 
-
     Optional<Post> findByUuidAndDeletedFalse(String uuid);
+
+    long countByUserAndCreatedAtBetweenAndDeletedFalse(User user, LocalDateTime start, LocalDateTime end);
 
     
     // 또래 피드 (PUBLIC, soft delete 제외, 특정 ID 제외, 나이 범위)

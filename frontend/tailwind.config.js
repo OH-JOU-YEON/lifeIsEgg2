@@ -8,6 +8,9 @@ export default {
         cream: "#FFF8F0",
         peach: "#FFD4C2",
       },
+      fontFamily: {
+        wisylist: ["Wisylist", "sans-serif"],
+      },
     },
   },
   plugins: [],

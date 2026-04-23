@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: "Wisylist";
+  src: url("./assets/fonts/wisylist.ttf") format("truetype");
+}
+
 :root {
   --text: #6b6375;
   --text-h: #08060d;

@@ -39,3 +39,6 @@ out/
 
 ### personal setting ###
 application-local.yml
+
+### frontend ###
+.env

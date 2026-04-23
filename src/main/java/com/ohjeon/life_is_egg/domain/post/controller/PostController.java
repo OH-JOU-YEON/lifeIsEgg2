@@ -39,7 +39,7 @@ public class PostController {
             @RequestBody @Valid PostCreateRequest request) {
         postService.create(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("status", 201, "message", "일기가 작성되었습니다", "data", null));
+                .body(Map.of("status", 201, "message", "일기가 작성되었습니다"));
     }
 
     // 내 일기 목록

@@ -17,12 +17,12 @@ export default function FeedPage() {
       const res = await api.get("/api/posts/feed", {
         params: { excludeIds: excludeIds.join(",") },
       });
-      const newPosts = res.data;
+      const newPosts = res.data.data;
       if (newPosts.length === 0) {
         setHasMore(false);
       } else {
         setPosts((prev) => [...prev, ...newPosts]);
-        setExcludeIds((prev) => [...prev, ...newPosts.map((p) => p.postId)]);
+        setExcludeIds((prev) => [...prev, ...newPosts.map((p) => p.id)]);
       }
     } catch (e) {
       console.error(e);
@@ -40,15 +40,14 @@ export default function FeedPage() {
       <div className="space-y-4">
         {posts.map((post) => (
           <div
-            key={post.postId}
+            key={post.id}
             className="bg-white rounded-2xl shadow-sm p-5 cursor-pointer hover:shadow-md transition"
             onClick={() => navigate(`/posts/${post.uuid}`)}
           >
             <p className="text-sm text-gray-400 mb-2">
-              {post.age}세 ·{" "}
               {new Date(post.createdAt).toLocaleDateString("ko-KR")}
             </p>
-            <p className="text-gray-700 line-clamp-3">{post.content}</p>
+            <p className="text-gray-700 line-clamp-3">{post.contentPreview}</p>
             <div className="flex items-center gap-2 mt-3 text-sm text-coral">
               <span>🤍 응원 {post.cheerCount}</span>
             </div>

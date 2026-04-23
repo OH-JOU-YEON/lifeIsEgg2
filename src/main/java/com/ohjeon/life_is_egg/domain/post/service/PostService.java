@@ -9,6 +9,8 @@ import com.ohjeon.life_is_egg.domain.post.dto.PostMyResponse;
 import com.ohjeon.life_is_egg.domain.post.entity.Post;
 import com.ohjeon.life_is_egg.domain.post.entity.Visibility;
 import com.ohjeon.life_is_egg.domain.post.repository.PostRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,6 +28,14 @@ public class PostService {
     public void create(Long userId, PostCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        // 하루 1개 제한
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+        long count = postRepository.countByUserAndCreatedAtBetweenAndDeletedFalse(user, startOfDay, endOfDay);
+        if (count > 0) {
+            throw new IllegalArgumentException("하루에 일기는 1개만 작성할 수 있습니다.");
+        }
 
         Post post = Post.builder()
                 .user(user)

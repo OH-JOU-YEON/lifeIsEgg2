@@ -11,7 +11,7 @@ export default function LoginPage() {
   const handleLogin = async () => {
     try {
       const res = await api.post("/api/auth/login", { email, password });
-      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("token", res.data.accessToken);
       navigate("/feed");
     } catch (e) {
       setError("이메일 또는 비밀번호가 올바르지 않습니다.");

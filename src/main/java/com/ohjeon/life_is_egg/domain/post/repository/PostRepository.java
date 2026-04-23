@@ -22,13 +22,13 @@ public interface PostRepository extends JpaRepository<Post, Long> {
 
     long countByUserAndCreatedAtBetweenAndDeletedFalse(User user, LocalDateTime start, LocalDateTime end);
 
-    
+
     // 또래 피드 (PUBLIC, soft delete 제외, 특정 ID 제외, 나이 범위)
     @Query(value = """
-            SELECT * FROM posts p
+            SELECT p.* FROM posts p
             JOIN users u ON p.user_id = u.id
             WHERE p.visibility = 'PUBLIC'
-            AND p.deleted = false
+            AND p.is_deleted = false
             AND (:excludeIdsEmpty = true OR p.id NOT IN :excludeIds)
             AND u.age BETWEEN :minAge AND :maxAge
             ORDER BY RAND()

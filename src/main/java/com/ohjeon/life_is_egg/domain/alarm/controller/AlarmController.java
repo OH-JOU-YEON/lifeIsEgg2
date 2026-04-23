@@ -43,6 +43,6 @@ public class AlarmController {
             @AuthenticationPrincipal Long userId,
             @PathVariable Long alarmId) {
         alarmService.readAlarm(userId, alarmId);
-        return ResponseEntity.ok(Map.of("status", 200, "message", "읽음 처리되었습니다", "data", null));
+        return ResponseEntity.ok(Map.of("status", 200, "message", "읽음 처리되었습니다"));
     }
 }

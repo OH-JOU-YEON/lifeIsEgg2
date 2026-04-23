@@ -41,6 +41,6 @@ public class CheerController {
             @RequestBody @Valid CheerCreateRequest request) {
         cheerService.create(userId, postUuid, request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("status", 201, "message", "응원이 등록되었습니다", "data", null));
+                .body(Map.of("status", 201, "message", "응원이 등록되었습니다"));
     }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import Layout from "../components/Layout";
 
 export default function FeedPage() {
   const [posts, setPosts] = useState([]);
@@ -35,20 +36,8 @@ export default function FeedPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-cream">
-      {/* 헤더 */}
-      <header className="bg-white shadow-sm px-4 py-3 flex items-center justify-between sticky top-0 z-10">
-        <h1 className="text-xl font-wisylist text-coral">🥚 삶은달걀</h1>
-        <button
-          className="bg-coral text-white text-sm px-4 py-1.5 rounded-full hover:bg-salmon transition"
-          onClick={() => navigate("/posts/new")}
-        >
-          일기 쓰기
-        </button>
-      </header>
-
-      {/* 피드 목록 */}
-      <main className="max-w-xl mx-auto px-4 py-6 space-y-4">
+    <Layout>
+      <div className="space-y-4">
         {posts.map((post) => (
           <div
             key={post.postId}
@@ -81,7 +70,7 @@ export default function FeedPage() {
             모든 일기를 불러왔어요 🥚
           </p>
         )}
-      </main>
-    </div>
+      </div>
+    </Layout>
   );
 }

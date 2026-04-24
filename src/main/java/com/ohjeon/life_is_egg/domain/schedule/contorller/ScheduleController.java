@@ -4,6 +4,7 @@ import com.ohjeon.life_is_egg.domain.schedule.dto.ScheduleCreateRequest;
 import com.ohjeon.life_is_egg.domain.schedule.dto.ScheduleResponse;
 import com.ohjeon.life_is_egg.domain.schedule.service.ScheduleService;
 import jakarta.validation.Valid;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
@@ -39,8 +40,11 @@ public class ScheduleController {
             @AuthenticationPrincipal Long userId,
             @RequestBody @Valid ScheduleCreateRequest request) {
         scheduleService.create(userId, request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("status", 201, "message", "일정이 등록되었습니다", "data", null));
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("status", 201);
+        response.put("message", "일정이 등록되었습니다");
+        response.put("data", null);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{scheduleId}")
@@ -49,7 +53,7 @@ public class ScheduleController {
             @PathVariable Long scheduleId,
             @RequestBody @Valid ScheduleCreateRequest request) {
         scheduleService.update(userId, scheduleId, request);
-        return ResponseEntity.ok(Map.of("status", 200, "message", "일정이 수정되었습니다", "data", null));
+        return ResponseEntity.ok(Map.of("status", 200, "message", "일정이 수정되었습니다"));
     }
 
     @PatchMapping("/{scheduleId}/complete")
@@ -57,7 +61,7 @@ public class ScheduleController {
             @AuthenticationPrincipal Long userId,
             @PathVariable Long scheduleId) {
         scheduleService.toggleComplete(userId, scheduleId);
-        return ResponseEntity.ok(Map.of("status", 200, "message", "일정 완료 상태가 변경되었습니다", "data", null));
+        return ResponseEntity.ok(Map.of("status", 200, "message", "일정 완료 상태가 변경되었습니다"));
     }
 
     @DeleteMapping("/{scheduleId}")
@@ -65,6 +69,6 @@ public class ScheduleController {
             @AuthenticationPrincipal Long userId,
             @PathVariable Long scheduleId) {
         scheduleService.delete(userId, scheduleId);
-        return ResponseEntity.ok(Map.of("status", 200, "message", "일정이 삭제되었습니다", "data", null));
+        return ResponseEntity.ok(Map.of("status", 200, "message", "일정이 삭제되었습니다"));
     }
 }

@@ -9,9 +9,11 @@ import com.ohjeon.life_is_egg.domain.goal.repository.GoalRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class GoalService {
 
     private final GoalRepository goalRepository;
@@ -27,6 +29,7 @@ public class GoalService {
                 .toList();
     }
 
+    @Transactional
     public void create(Long userId, GoalCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
@@ -48,6 +51,7 @@ public class GoalService {
         goalRepository.save(goal);
     }
 
+    @Transactional
     public GoalResponse updateProgress(Long userId, Long goalId, int increment) {
         Goal goal = goalRepository.findById(goalId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 목표입니다."));
@@ -64,6 +68,7 @@ public class GoalService {
         return new GoalResponse(goal);
     }
 
+    @Transactional
     public void update(Long userId, Long goalId, GoalCreateRequest request) {
         Goal goal = goalRepository.findById(goalId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 목표입니다."));
@@ -80,6 +85,7 @@ public class GoalService {
                 request.getEndDate(), request.getCategory());
     }
 
+    @Transactional
     public void delete(Long userId, Long goalId) {
         Goal goal = goalRepository.findById(goalId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 목표입니다."));

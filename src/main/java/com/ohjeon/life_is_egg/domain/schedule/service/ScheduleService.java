@@ -9,9 +9,11 @@ import com.ohjeon.life_is_egg.domain.schedule.repository.ScheduleRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
@@ -27,6 +29,7 @@ public class ScheduleService {
                 .toList();
     }
 
+    @Transactional
     public void create(Long userId, ScheduleCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
@@ -47,6 +50,7 @@ public class ScheduleService {
         scheduleRepository.save(schedule);
     }
 
+    @Transactional
     public void update(Long userId, Long scheduleId, ScheduleCreateRequest request) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일정입니다."));
@@ -63,6 +67,7 @@ public class ScheduleService {
                 request.getStartTime(), request.getEndTime(), request.getCategory());
     }
 
+    @Transactional
     public void toggleComplete(Long userId, Long scheduleId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일정입니다."));
@@ -74,6 +79,7 @@ public class ScheduleService {
         schedule.toggleComplete();
     }
 
+    @Transactional
     public void delete(Long userId, Long scheduleId) {
         Schedule schedule = scheduleRepository.findById(scheduleId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일정입니다."));

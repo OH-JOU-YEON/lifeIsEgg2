@@ -8,6 +8,8 @@ import FeedPage from "./pages/FeedPage";
 import PostNewPage from "./pages/PostNewPage";
 import PostDetailPage from "./pages/PostDetailPage";
 import AlarmPage from "./pages/AlarmPage";
+import GoalsPage from "./pages/GoalsPage";
+import SchedulePage from "./pages/SchedulePage";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -18,6 +20,8 @@ createRoot(document.getElementById("root")).render(
       <Route path="/posts/new" element={<PostNewPage />} />
       <Route path="/posts/:uuid" element={<PostDetailPage />} />
       <Route path="/alarms" element={<AlarmPage />} />
+      <Route path="/goals" element={<GoalsPage />} />
+      <Route path="/schedule" element={<SchedulePage />} />
     </Routes>
   </BrowserRouter>,
 );

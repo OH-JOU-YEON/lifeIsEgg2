@@ -42,7 +42,7 @@ public class GoalController {
             @RequestBody @Valid GoalCreateRequest request) {
         goalService.create(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("status", 201, "message", "목표가 등록되었습니다", "data", null));
+                .body(Map.of("status", 201, "message", "목표가 등록되었습니다"));
     }
 
     @PatchMapping("/{goalId}/progress")
@@ -60,7 +60,7 @@ public class GoalController {
             @PathVariable Long goalId,
             @RequestBody @Valid GoalCreateRequest request) {
         goalService.update(userId, goalId, request);
-        return ResponseEntity.ok(Map.of("status", 200, "message", "목표가 수정되었습니다", "data", null));
+        return ResponseEntity.ok(Map.of("status", 200, "message", "목표가 수정되었습니다"));
     }
 
     @DeleteMapping("/{goalId}")
@@ -68,6 +68,6 @@ public class GoalController {
             @AuthenticationPrincipal Long userId,
             @PathVariable Long goalId) {
         goalService.delete(userId, goalId);
-        return ResponseEntity.ok(Map.of("status", 200, "message", "목표가 삭제되었습니다", "data", null));
+        return ResponseEntity.ok(Map.of("status", 200, "message", "목표가 삭제되었습니다"));
     }
 }

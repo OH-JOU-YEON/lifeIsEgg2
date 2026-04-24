@@ -70,8 +70,14 @@ public class PostService {
         Byte minAge = (byte) Math.max(0, age - 5);
         Byte maxAge = (byte) (age + 5);
 
-        return postRepository.findFeedPosts(excludeIds, excludeIds.isEmpty(), minAge, maxAge)
-                .stream()
+        List<Post> posts = postRepository.findFeedPosts(excludeIds, excludeIds.isEmpty(), minAge, maxAge);
+
+        // 결과가 없으면 또래 범위 제한 없이 전체에서 가져오기
+        if (posts.isEmpty()) {
+            posts = postRepository.findFeedPosts(excludeIds, excludeIds.isEmpty(), (byte) 0, (byte) 127);
+        }
+
+        return posts.stream()
                 .map(post -> new PostFeedResponse(post, cheerRepository.countByPost(post)))
                 .toList();
     }

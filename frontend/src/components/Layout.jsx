@@ -1,8 +1,30 @@
+import { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import api from "../api/axios";
 
 export default function Layout({ children }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await api.get("/api/alarms/count");
+      setUnreadCount(res.data.data.count);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    fetchUnreadCount();
+    const interval = setInterval(fetchUnreadCount, 30000);
+    window.addEventListener("alarmRead", fetchUnreadCount);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("alarmRead", fetchUnreadCount);
+    };
+  }, []);
 
   const navItems = [
     { path: "/feed", label: "피드", icon: "🏠" },
@@ -21,12 +43,25 @@ export default function Layout({ children }) {
         >
           🥚 삶은달걀
         </h1>
-        <button
-          className="bg-coral text-white text-sm px-4 py-1.5 rounded-full hover:bg-salmon transition"
-          onClick={() => navigate("/posts/new")}
-        >
-          일기 쓰기
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            className="relative text-gray-400 hover:text-coral transition"
+            onClick={() => navigate("/alarms")}
+          >
+            🔔
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-coral text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
+            )}
+          </button>
+          <button
+            className="bg-coral text-white text-sm px-4 py-1.5 rounded-full hover:bg-salmon transition"
+            onClick={() => navigate("/posts/new")}
+          >
+            일기 쓰기
+          </button>
+        </div>
       </header>
 
       {/* 본문 */}

@@ -2,6 +2,7 @@ package com.ohjeon.life_is_egg.domain.post.service;
 
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
+import com.ohjeon.life_is_egg.domain.cheer.repository.CheerRepository;
 import com.ohjeon.life_is_egg.domain.post.dto.PostCreateRequest;
 import com.ohjeon.life_is_egg.domain.post.dto.PostDetailResponse;
 import com.ohjeon.life_is_egg.domain.post.dto.PostFeedResponse;
@@ -16,15 +17,19 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PostService {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CheerRepository cheerRepository;
 
     // 일기 작성
+    @Transactional
     public void create(Long userId, PostCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
@@ -67,7 +72,7 @@ public class PostService {
 
         return postRepository.findFeedPosts(excludeIds, excludeIds.isEmpty(), minAge, maxAge)
                 .stream()
-                .map(PostFeedResponse::new)
+                .map(post -> new PostFeedResponse(post, cheerRepository.countByPost(post)))
                 .toList();
     }
 
@@ -81,10 +86,12 @@ public class PostService {
         }
 
         boolean isOwner = post.getUser().getId().equals(userId);
-        return new PostDetailResponse(post, isOwner);
+        long cheerCount = cheerRepository.countByPost(post);
+        return new PostDetailResponse(post, isOwner, cheerCount);
     }
 
     // 일기 수정
+    @Transactional
     public void update(Long userId, String uuid, PostCreateRequest request) {
         Post post = postRepository.findByUuidAndDeletedFalse(uuid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일기입니다."));
@@ -97,6 +104,7 @@ public class PostService {
     }
 
     // 일기 삭제
+    @Transactional
     public void delete(Long userId, String uuid) {
         Post post = postRepository.findByUuidAndDeletedFalse(uuid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일기입니다."));

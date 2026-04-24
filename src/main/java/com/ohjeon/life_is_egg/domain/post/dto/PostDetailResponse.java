@@ -18,15 +18,16 @@ public class PostDetailResponse {
     private final LocalDateTime createdAt;
     private final LocalDateTime updatedAt;
 
-    public PostDetailResponse(Post post, boolean isOwner) {
+    public PostDetailResponse(Post post, boolean isOwner, long cheerCount) {
         this.id = post.getId();
         this.title = post.getTitle();
         this.content = post.getContent();
         this.uuid = post.getUuid();
         this.visibility = post.getVisibility();
         this.isOwner = isOwner;
-        this.cheerCount = 0;
+        this.cheerCount = (int) cheerCount;
         this.createdAt = post.getCreatedAt();
         this.updatedAt = post.getUpdatedAt();
+
     }
 }

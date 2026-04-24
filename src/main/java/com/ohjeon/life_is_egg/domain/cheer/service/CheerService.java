@@ -61,7 +61,7 @@ public class CheerService {
         Post post = postRepository.findByUuidAndDeletedFalse(postUuid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일기입니다."));
 
-        if (post.getUser().getId().equals(userId)) {
+        if (post.getUser().getId().equals(userId) && request.getParentId() == null) {
             throw new IllegalArgumentException("본인 일기에는 응원할 수 없습니다.");
         }
 
@@ -80,7 +80,17 @@ public class CheerService {
 
         cheerRepository.save(cheer);
 
-        alarmService.createCheerAlarm(post.getUser(), post, cheer);
+        // 일기 주인에게 알람 (본인이 작성한 경우 제외)
+        if (!post.getUser().getId().equals(userId)) {
+            alarmService.createCheerAlarm(post.getUser(), post, cheer);
+        }
+
+        // 답글이면 부모 응원 작성자에게도 알람 (일기 주인이거나 본인이면 제외)
+        if (parent != null
+                && !parent.getUser().getId().equals(post.getUser().getId())
+                && !parent.getUser().getId().equals(userId)) {
+            alarmService.createCheerAlarm(parent.getUser(), post, cheer);
+        }
     }
 
     // 응원 삭제

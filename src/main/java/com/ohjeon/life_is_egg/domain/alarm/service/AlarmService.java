@@ -10,9 +10,11 @@ import com.ohjeon.life_is_egg.domain.post.entity.Post;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AlarmService {
 
     private final AlarmRepository alarmRepository;
@@ -38,6 +40,7 @@ public class AlarmService {
     }
 
     // 알림 읽음 처리
+    @Transactional
     public void readAlarm(Long userId, Long alarmId) {
         Alarm alarm = alarmRepository.findById(alarmId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 알림입니다."));
@@ -50,6 +53,7 @@ public class AlarmService {
     }
 
     // 알림 생성 (응원 작성 시 CheerService에서 호출)
+    @Transactional
     public void createCheerAlarm(User postOwner, Post post, Cheer cheer) {
         Alarm alarm = Alarm.builder()
                 .user(postOwner)

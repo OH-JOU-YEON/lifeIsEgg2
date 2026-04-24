@@ -24,4 +24,6 @@ public interface CheerRepository extends JpaRepository<Cheer, Long> {
             """)
     long countCheersByPostOwner(@Param("user") User user, @Param("start") LocalDateTime start,
                                 @Param("end") LocalDateTime end);
+
+    long countByPost(Post post);
 }

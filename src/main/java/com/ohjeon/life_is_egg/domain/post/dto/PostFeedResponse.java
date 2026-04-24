@@ -14,14 +14,14 @@ public class PostFeedResponse {
     private final int cheerCount;
     private final LocalDateTime createdAt;
 
-    public PostFeedResponse(Post post) {
+    public PostFeedResponse(Post post, long cheerCount) {
         this.id = post.getId();
         this.title = post.getTitle();
         this.contentPreview = post.getContent().length() > 50
                 ? post.getContent().substring(0, 50)
                 : post.getContent();
         this.uuid = post.getUuid();
-        this.cheerCount = 0;
+        this.cheerCount = (int) cheerCount;
         this.createdAt = post.getCreatedAt();
     }
 }

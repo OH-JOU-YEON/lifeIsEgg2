@@ -8,6 +8,7 @@ import lombok.Getter;
 public class AlarmResponse {
 
     private final Long id;
+    private final String postUuid;
     private final String content;
     private final Long postId;
     private final Long cheerId;
@@ -16,6 +17,7 @@ public class AlarmResponse {
 
     public AlarmResponse(Alarm alarm) {
         this.id = alarm.getId();
+        this.postUuid = alarm.getPost() != null ? alarm.getPost().getUuid() : null;
         this.content = alarm.getContent();
         this.postId = alarm.getPost() != null ? alarm.getPost().getId() : null;
         this.cheerId = alarm.getCheer() != null ? alarm.getCheer().getId() : null;

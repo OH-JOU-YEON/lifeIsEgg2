@@ -65,8 +65,6 @@ export default function GoalsPage() {
     setShowModal(true);
   };
 
-  const [formError, setFormError] = useState("");
-
   const handleSubmit = async () => {
     if (
       !form.title ||

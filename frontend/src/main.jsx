@@ -10,6 +10,7 @@ import PostDetailPage from "./pages/PostDetailPage";
 import AlarmPage from "./pages/AlarmPage";
 import GoalsPage from "./pages/GoalsPage";
 import SchedulePage from "./pages/SchedulePage";
+import DashboardPage from "./pages/DashboardPage";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -22,6 +23,7 @@ createRoot(document.getElementById("root")).render(
       <Route path="/alarms" element={<AlarmPage />} />
       <Route path="/goals" element={<GoalsPage />} />
       <Route path="/schedule" element={<SchedulePage />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
     </Routes>
   </BrowserRouter>,
 );

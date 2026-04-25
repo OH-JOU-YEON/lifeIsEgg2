@@ -3,10 +3,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        salmon: "#FA8072",
-        coral: "#FF6B6B",
-        cream: "#FFF8F0",
-        peach: "#FFD4C2",
+        cream: "#FFF8F2",
+        coral: "#FF7F50",
+        mango: "#FFB347",
+        salmon: "#FF9F7A",
+        peach: "#FFE8DC",
       },
       fontFamily: {
         wisylist: ["Wisylist", "sans-serif"],

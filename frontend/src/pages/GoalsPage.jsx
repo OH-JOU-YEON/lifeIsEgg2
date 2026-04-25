@@ -123,7 +123,7 @@ export default function GoalsPage() {
               className={`text-sm px-3 py-1 rounded-full border transition ${
                 showCompleted
                   ? "bg-coral text-white border-coral"
-                  : "text-gray-400 border-gray-200"
+                  : "bg-white text-gray-400 border-gray-200"
               }`}
               onClick={() => setShowCompleted(true)}
             >

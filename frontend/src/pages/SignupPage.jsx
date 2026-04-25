@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../api/axios";
+import eggsLogo from "../assets/eggs.png";
 
 export default function SignupPage() {
   const [form, setForm] = useState({
@@ -28,9 +29,14 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-cream flex items-center justify-center">
       <div className="bg-white rounded-2xl shadow-md p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-coral text-center mb-6">
-          🥚 회원가입
-        </h1>
+        <div className="flex flex-col items-center gap-2 mb-6">
+          <img
+            src={eggsLogo}
+            alt="삶은달걀 로고"
+            className="w-16 h-16 object-contain"
+          />
+          <span className="text-2xl font-wisylist text-gray-800">회원가입</span>
+        </div>
         {["email", "password", "nickname", "age"].map((field) => (
           <input
             key={field}

@@ -50,6 +50,7 @@ export default function Layout({ children }) {
           />
           <span className="text-xl font-wisylist text-gray-800">삶은달걀</span>
         </div>
+
         <div className="flex items-center gap-2">
           <button
             className="relative w-9 h-9 flex items-center justify-center text-gray-400 hover:text-coral transition rounded-full hover:bg-peach"
@@ -61,6 +62,15 @@ export default function Layout({ children }) {
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
+          </button>
+          <button
+            className="text-sm px-4 py-2 rounded-full border border-gray-200 text-gray-400 hover:border-coral hover:text-coral transition font-medium"
+            onClick={() => {
+              localStorage.removeItem("token");
+              navigate("/login");
+            }}
+          >
+            로그아웃
           </button>
           <button
             className="bg-coral text-white text-sm px-4 py-2 rounded-full hover:bg-salmon transition font-medium"

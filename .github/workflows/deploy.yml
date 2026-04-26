@@ -19,7 +19,9 @@ jobs:
           distribution: 'temurin'
 
       - name: Build
-        run: ./gradlew build -x test
+        run: |
+          chmod +x ./gradlew
+          ./gradlew build -x test
 
       - name: Copy jar to EC2
         uses: appleboy/scp-action@v0.1.7

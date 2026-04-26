@@ -18,7 +18,7 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Build
+      - name: Build backend
         run: |
           chmod +x ./gradlew
           ./gradlew build -x test
@@ -32,6 +32,38 @@ jobs:
           port: ${{ secrets.EC2_PORT }}
           source: "build/libs/*.jar"
           target: "/home/ubuntu/"
+          strip_components: 2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Copy frontend to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          source: "frontend/dist/*"
+          target: "/var/www/life-is-egg/"
+          strip_components: 2
+
+      - name: Restart service
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT }}
+          script: /home/ubuntu/deploy.sh
           strip_components: 2
 
       - name: Restart service

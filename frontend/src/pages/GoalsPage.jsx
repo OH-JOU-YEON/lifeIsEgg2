@@ -77,7 +77,34 @@ export default function GoalsPage() {
       return;
     }
     setFormError("");
-    // ... 나머지 동일
+    setLoading(true);
+    try {
+      if (editTarget) {
+        await api.put(`/api/goals/${editTarget.id}`, {
+          title: form.title,
+          targetValue: Number(form.targetValue),
+          category: form.category || null,
+          startDate: form.startDate,
+          endDate: form.endDate,
+        });
+      } else {
+        await api.post("/api/goals", {
+          title: form.title,
+          targetValue: Number(form.targetValue),
+          unit: form.unit,
+          category: form.category || null,
+          startDate: form.startDate,
+          endDate: form.endDate,
+        });
+      }
+      setShowModal(false);
+      fetchGoals();
+    } catch (e) {
+      setFormError("저장에 실패했어요. 다시 시도해주세요.");
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleProgress = async (goalId, increment) => {

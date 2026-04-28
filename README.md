@@ -1,4 +1,4 @@
-<img width="1687" height="915" alt="Copy of Untitled Diagram" src="https://github.com/user-attachments/assets/5e87c89c-78ec-4f13-8c31-993055dacc83" /># 🥚 삶은달걀
+🥚 삶은달걀
 
 > 준비하는 당신을 위한 성장 기록 및 응원 서비스
 

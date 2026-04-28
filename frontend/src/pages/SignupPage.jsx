@@ -17,7 +17,24 @@ export default function SignupPage() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  const validate = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,20}$/;
+
+    if (!emailRegex.test(form.email)) {
+      setError("올바른 이메일 형식을 입력해주세요.");
+      return false;
+    }
+    if (!passwordRegex.test(form.password)) {
+      setError("비밀번호는 8~20자, 영문/숫자/특수문자를 포함해야 합니다.");
+      return false;
+    }
+    return true;
+  };
+
   const handleSignup = async () => {
+    if (!validate()) return;
     try {
       await api.post("/api/auth/signup", { ...form, age: Number(form.age) });
       navigate("/login");
@@ -38,28 +55,39 @@ export default function SignupPage() {
           <span className="text-2xl font-wisylist text-gray-800">회원가입</span>
         </div>
         {["email", "password", "nickname", "age"].map((field) => (
-          <input
-            key={field}
-            className="w-full border rounded-lg px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-peach"
-            type={
-              field === "password"
-                ? "password"
-                : field === "age"
-                  ? "number"
-                  : "text"
-            }
-            name={field}
-            placeholder={
-              {
-                email: "이메일",
-                password: "비밀번호",
-                nickname: "닉네임",
-                age: "나이",
-              }[field]
-            }
-            value={form[field]}
-            onChange={handleChange}
-          />
+          <div key={field}>
+            <input
+              className="w-full border rounded-lg px-4 py-2 mb-1 focus:outline-none focus:ring-2 focus:ring-peach"
+              type={
+                field === "password"
+                  ? "password"
+                  : field === "age"
+                    ? "number"
+                    : "text"
+              }
+              name={field}
+              placeholder={
+                {
+                  email: "이메일",
+                  password: "비밀번호",
+                  nickname: "닉네임",
+                  age: "나이",
+                }[field]
+              }
+              value={form[field]}
+              onChange={handleChange}
+            />
+            {field === "email" && (
+              <p className="text-xs text-gray-400 mb-2">
+                example@email.com 형식으로 입력해주세요
+              </p>
+            )}
+            {field === "password" && (
+              <p className="text-xs text-gray-400 mb-2">
+                8~20자, 영문/숫자/특수문자(@$!%*#?&) 포함
+              </p>
+            )}
+          </div>
         ))}
         {error && <p className="text-red-400 text-sm mb-2">{error}</p>}
         <button

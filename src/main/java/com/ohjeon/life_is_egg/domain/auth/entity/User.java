@@ -46,11 +46,19 @@ public class User {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    private boolean emailVerified = false;
+
     @Builder
     public User(String email, String password, String nickname, Byte age) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
         this.age = age;
+        this.emailVerified = false;
+    }
+
+    public void verifyEmail() {
+        this.emailVerified = true;
     }
 }

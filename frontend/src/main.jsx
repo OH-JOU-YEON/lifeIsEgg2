@@ -13,6 +13,8 @@ import SchedulePage from "./pages/SchedulePage";
 import DashboardPage from "./pages/DashboardPage";
 import LandingPage from "./pages/LandingPage";
 import PrivateRoute from "./components/PrivateRoute";
+import VerifyNoticePage from "./pages/VerifyNoticePage";
+import VerifyPage from "./pages/VerifyPage";
 
 createRoot(document.getElementById("root")).render(
   <BrowserRouter>
@@ -76,6 +78,8 @@ createRoot(document.getElementById("root")).render(
           </PrivateRoute>
         }
       />
+      <Route path="/signup/verify-notice" element={<VerifyNoticePage />} />
+      <Route path="/verify" element={<VerifyPage />} />
     </Routes>
   </BrowserRouter>,
 );

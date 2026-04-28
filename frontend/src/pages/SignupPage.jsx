@@ -37,7 +37,7 @@ export default function SignupPage() {
     if (!validate()) return;
     try {
       await api.post("/api/auth/signup", { ...form, age: Number(form.age) });
-      navigate("/login");
+      navigate("/signup/verify-notice");
     } catch (e) {
       setError("회원가입에 실패했습니다. 입력값을 확인해주세요.");
     }

@@ -13,6 +13,8 @@ import com.ohjeon.life_is_egg.domain.post.repository.PostRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -80,8 +82,19 @@ public class PostService {
             }
         }
 
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+
+        List<Long> postIds = posts.stream().map(Post::getId).toList();
+        Map<Long, Long> cheerCountMap = cheerRepository.countByPostIds(postIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+
         return posts.stream()
-                .map(post -> new PostFeedResponse(post, cheerRepository.countByPost(post)))
+                .map(post -> new PostFeedResponse(post, cheerCountMap.getOrDefault(post.getId(), 0L)))
                 .toList();
     }
 

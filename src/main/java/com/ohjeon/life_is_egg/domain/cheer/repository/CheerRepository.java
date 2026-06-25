@@ -16,6 +16,14 @@ public interface CheerRepository extends JpaRepository<Cheer, Long> {
     // 특정 일기의 전체 응원 조회 (트리 조립용 - flat으로 전체 가져옴)
     List<Cheer> findByPostOrderByCreatedAtAsc(Post post);
 
+    @Query("""
+            SELECT c.post.id, COUNT(c)
+            FROM Cheer c
+            WHERE c.post.id IN :postIds
+            GROUP BY c.post.id
+            """)
+    List<Object[]> countByPostIds(@Param("postIds") List<Long> postIds);
+
     // 내 일기에 달린 응원 수 (이번 달)
     @Query("""
             SELECT COUNT(c) FROM Cheer c

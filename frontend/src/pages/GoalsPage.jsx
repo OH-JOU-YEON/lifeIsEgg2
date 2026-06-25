@@ -83,6 +83,7 @@ export default function GoalsPage() {
         await api.put(`/api/goals/${editTarget.id}`, {
           title: form.title,
           targetValue: Number(form.targetValue),
+          unit: form.unit,
           category: form.category || null,
           startDate: form.startDate,
           endDate: form.endDate,
@@ -133,7 +134,6 @@ export default function GoalsPage() {
   return (
     <Layout>
       <div className="flex flex-col gap-4">
-        {/* 상단 컨트롤 */}
         <div className="flex items-center justify-between">
           <div className="flex gap-2">
             <button
@@ -165,7 +165,6 @@ export default function GoalsPage() {
           </button>
         </div>
 
-        {/* 목표 카드 목록 */}
         {goals.length === 0 ? (
           <div className="text-center text-gray-400 text-sm py-16">
             {showCompleted ? "완료된 목표가 없어요" : "목표를 추가해보세요 🥚"}
@@ -260,7 +259,6 @@ export default function GoalsPage() {
           <p className="text-xs text-red-400 text-center">{formError}</p>
         )}
 
-        {/* 모달 */}
         {showModal && (
           <div className="fixed inset-0 bg-black/40 z-50 flex items-end justify-center">
             <div className="bg-white w-full max-w-xl rounded-t-2xl p-5 flex flex-col gap-4">

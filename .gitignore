@@ -42,3 +42,6 @@ application-local.yml
 
 ### frontend ###
 .env
+
+### Test seed ###
+src/test/java/com/ohjeon/life_is_egg/seed/

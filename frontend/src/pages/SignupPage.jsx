@@ -30,6 +30,14 @@ export default function SignupPage() {
       setError("비밀번호는 8~20자, 영문/숫자/특수문자를 포함해야 합니다.");
       return false;
     }
+    if (!form.nickname.trim()) {
+      setError("닉네임을 입력해주세요.");
+      return false;
+    }
+    if (!form.age || isNaN(Number(form.age)) || Number(form.age) <= 0) {
+      setError("나이를 입력해주세요.");
+      return false;
+    }
     return true;
   };
 
@@ -39,7 +47,10 @@ export default function SignupPage() {
       await api.post("/api/auth/signup", { ...form, age: Number(form.age) });
       navigate("/signup/verify-notice");
     } catch (e) {
-      setError("회원가입에 실패했습니다. 입력값을 확인해주세요.");
+      setError(
+        e.response?.data?.message ||
+          "회원가입에 실패했습니다. 입력값을 확인해주세요.",
+      );
     }
   };
 

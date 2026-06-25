@@ -2,6 +2,7 @@ package com.ohjeon.life_is_egg.domain.auth.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,5 +25,6 @@ public class SignupRequest {
     @NotBlank
     private String nickname;
 
+    @NotNull(message = "나이를 입력해주세요.")
     private Byte age;
 }

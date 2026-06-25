@@ -66,15 +66,18 @@ public class PostService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        Byte age = user.getAge();
-        Byte minAge = (byte) Math.max(0, age - 5);
-        Byte maxAge = (byte) (age + 5);
-
-        List<Post> posts = postRepository.findFeedPosts(excludeIds, excludeIds.isEmpty(), minAge, maxAge);
-
-        // 결과가 없으면 또래 범위 제한 없이 전체에서 가져오기
-        if (posts.isEmpty()) {
+        List<Post> posts;
+        if (user.getAge() == null) {
             posts = postRepository.findFeedPosts(excludeIds, excludeIds.isEmpty(), (byte) 0, (byte) 127);
+        } else {
+            Byte age = user.getAge();
+            Byte minAge = (byte) Math.max(0, age - 5);
+            Byte maxAge = (byte) (age + 5);
+            posts = postRepository.findFeedPosts(excludeIds, excludeIds.isEmpty(), minAge, maxAge);
+
+            if (posts.isEmpty()) {
+                posts = postRepository.findFeedPosts(excludeIds, excludeIds.isEmpty(), (byte) 0, (byte) 127);
+            }
         }
 
         return posts.stream()

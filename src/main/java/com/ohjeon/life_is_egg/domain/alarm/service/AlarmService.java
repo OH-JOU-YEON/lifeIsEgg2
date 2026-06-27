@@ -64,4 +64,9 @@ public class AlarmService {
 
         alarmRepository.save(alarm);
     }
+
+    @Transactional
+    public void deleteByCheer(Cheer cheer) {
+        alarmRepository.deleteByCheer(cheer);
+    }
 }

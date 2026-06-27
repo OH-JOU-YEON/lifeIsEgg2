@@ -36,7 +36,7 @@ class EmailServiceTest {
 
         verify(mailSender).send(argThat((SimpleMailMessage message) ->
                 message.getTo()[0].equals(to) &&
-                        message.getText().contains("http://localhost:5173/api/auth/verify?token=" + token)
+                        message.getText().contains("http://localhost:5173/verify?token=" + token)
         ));
     }
 }

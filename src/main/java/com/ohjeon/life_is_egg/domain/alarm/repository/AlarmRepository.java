@@ -2,6 +2,7 @@ package com.ohjeon.life_is_egg.domain.alarm.repository;
 
 import com.ohjeon.life_is_egg.domain.alarm.entity.Alarm;
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
+import com.ohjeon.life_is_egg.domain.cheer.entity.Cheer;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,4 +15,6 @@ public interface AlarmRepository extends JpaRepository<Alarm, Long> {
 
     // 읽지 않은 알림 개수
     long countByUserAndReadFalse(User user);
+
+    void deleteByCheer(Cheer cheer);
 }

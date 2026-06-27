@@ -4,15 +4,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.ohjeon.life_is_egg.domain.alarm.repository.AlarmRepository;
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
 import com.ohjeon.life_is_egg.domain.cheer.dto.CheerCreateRequest;
 import com.ohjeon.life_is_egg.domain.cheer.dto.CheerResponse;
 import com.ohjeon.life_is_egg.domain.cheer.entity.Cheer;
 import com.ohjeon.life_is_egg.domain.cheer.repository.CheerRepository;
+import com.ohjeon.life_is_egg.domain.goal.repository.GoalRepository;
 import com.ohjeon.life_is_egg.domain.post.entity.Post;
 import com.ohjeon.life_is_egg.domain.post.entity.Visibility;
 import com.ohjeon.life_is_egg.domain.post.repository.PostRepository;
+import com.ohjeon.life_is_egg.domain.schedule.repository.ScheduleRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,14 +39,26 @@ class CheerServiceTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private GoalRepository goalRepository;
+
+    @Autowired
+    private ScheduleRepository scheduleRepository;
+
+    @Autowired
+    private AlarmRepository alarmRepository;
+
     private User postOwner;
     private User cheerWriter;
     private Post post;
 
     @BeforeEach
     void setUp() {
+        alarmRepository.deleteAll();
         cheerRepository.deleteAll();
         postRepository.deleteAll();
+        goalRepository.deleteAll();      // 추가
+        scheduleRepository.deleteAll();
         userRepository.deleteAll();
 
         postOwner = userRepository.save(User.builder()

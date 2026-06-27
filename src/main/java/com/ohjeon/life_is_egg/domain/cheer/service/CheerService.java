@@ -15,9 +15,11 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CheerService {
 
     private final CheerRepository cheerRepository;
@@ -54,6 +56,7 @@ public class CheerService {
     }
 
     // 응원 작성
+    @Transactional
     public void create(Long userId, String postUuid, CheerCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
@@ -94,6 +97,7 @@ public class CheerService {
     }
 
     // 응원 삭제
+    @Transactional
     public void delete(Long userId, Long cheerId) {
         Cheer cheer = cheerRepository.findById(cheerId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 응원입니다."));
@@ -101,6 +105,8 @@ public class CheerService {
         if (!cheer.getPost().getUser().getId().equals(userId)) {
             throw new IllegalArgumentException("일기 주인만 응원을 삭제할 수 있습니다.");
         }
+
+        alarmService.deleteByCheer(cheer);
 
         cheerRepository.delete(cheer);
     }

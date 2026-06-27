@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.ohjeon.life_is_egg.domain.auth.dto.LoginRequest;
 import com.ohjeon.life_is_egg.domain.auth.dto.LoginResponse;
 import com.ohjeon.life_is_egg.domain.auth.dto.SignupRequest;
+import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
@@ -42,8 +43,13 @@ class AuthServiceTest {
 
     @Test
     void 로그인_성공() {
-        // 회원가입 먼저
+        // 회원가입
         authService.signup(new SignupRequest("login@test.com", "password1234", "로그인테스터", null));
+
+        // 이메일 인증 처리 (실제로는 메일 링크 클릭 시 일어나는 일)
+        User user = userRepository.findByEmail("login@test.com").orElseThrow();
+        user.verifyEmail();
+        userRepository.save(user);
 
         // 로그인
         LoginRequest request = new LoginRequest("login@test.com", "password1234");

@@ -103,7 +103,7 @@ t3.micro는 RAM 1GB로, Gradle 데몬이 메모리를 전부 점유하면서 OOM
 
 ---
 
-### 2. 무한 트리 응원 구조의 N+1 문제
+### 2. 무한 응원 구조의 N+1 문제
 
 **증상**
 응원(Cheer) 조회 시 댓글 수만큼 추가 쿼리 발생
@@ -136,6 +136,88 @@ OPTIONS를 추가해도 Spring Security가 CORS 필터 앞단에서 요청을 �
 `SecurityConfig`의 `authorizeHttpRequests`에 OPTIONS 요청 전체 `permitAll()` 추가
 
 ---
+
+
+## 🔧 쿼리 성능 최적화 (2026.06.24 ~ 06.26)
+
+## 한 줄 요약
+
+N+1 쿼리 문제를 발견하고 해결했으며, 반복 조회가 많은 통계 API에 Redis 캐싱을 적용해 쿼리 수와 응답 시간을 줄였다.
+
+---
+
+## 1. 배경
+
+- 배포 완료된 개인 프로젝트(삶은달걀)의 실제 성능을 점검하기 위해, 더미 데이터(user 30 / post 150 / cheer 1,000+ / goal·schedule 각 240)를 시드 데이터로 구축
+- Hibernate SQL 로그(`org.hibernate.SQL: DEBUG`)를 활용해 주요 API의 실제 쿼리 실행 횟수와 응답 시간을 측정
+- 측정 대상: 또래 피드 조회, 응원 조회, 대시보드 통계 조회
+
+## 2. N+1 문제 발견 및 해결 — 또래 피드 조회
+
+**문제**
+
+```java
+return posts.stream()
+        .map(post -> new PostFeedResponse(post, cheerRepository.countByPost(post)))
+        .toList();
+```
+
+게시글 10개를 조회한 뒤, 게시글마다 응원 수를 개별 쿼리로 호출 → 게시글 수에 비례해 쿼리가 증가하는 N+1 패턴
+
+**해결**
+
+- `post_id IN (...) GROUP BY post_id` 형태의 배치 쿼리로 응원 수를 한 번에 조회
+- 조회 결과를 `Map<Long, Long>`으로 변환해 메모리에서 게시글과 매칭
+
+```java
+List<Long> postIds = posts.stream().map(Post::getId).toList();
+Map<Long, Long> cheerCountMap = cheerRepository.countByPostIds(postIds).stream()
+        .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+```
+
+**측정 결과 (로컬 기준)**
+
+|항목|Before|After|개선율|
+|---|---|---|---|
+|쿼리 개수|11개 (posts 1 + cheers 10)|2개 (posts 1 + cheers 1)|**약 82% 감소**|
+|응답시간|241ms|173ms|약 28% 감소|
+
+> 로컬 환경은 DB와 애플리케이션이 같은 머신에서 동작해 네트워크 왕복 비용이 거의 없는 환경이다. 실제 운영 서버(DB와 애플리케이션이 분리된 구조)에서는 쿼리 1회당 왕복 비용이 더 크기 때문에, 쿼리 수 감소에 따른 응답시간 개선 효과는 더 크게 나타날 것으로 예상된다.
+
+## 3. N+1 의심 지점 추가 점검 (문제 없음 확인)
+
+| 지점         | 쿼리 개수                         | 결론                                                                            |
+| ---------- | ----------------------------- | ----------------------------------------------------------------------------- |
+| 응원의 트리 조회  | 2개 (post 1 + cheer flat 조회 1) | N+1 없음. 댓글/답글을 flat하게 한 번에 조회한 뒤 메모리에서 트리 구조로 조립하는 방식이라 데이터 양과 무관하게 쿼리 수가 고정됨 |
+| 대시보드 통계 조회 | 8개                            | N+1은 아니지만(통계 항목별 쿼리 1개씩, 정직한 구조), 호출 빈도가 높아 캐싱 적용 1순위로 선정                     |
+
+## 4. Redis 캐싱 적용 — 대시보드 통계 조회
+
+**선정 이유**
+
+- 대시보드 통계는 매 요청마다 쿼리 8개(목표 진행률, 카테고리별 학습시간, 일기/응원 수 등)를 실행
+- 사용자가 새 글/응원/일정을 추가하지 않는 한 단기간 내 결과가 거의 변하지 않는 데이터 → 캐싱에 적합
+
+**구현**
+
+- Redis 연동: Docker 기반 로컬 Redis, Spring Boot `spring-boot-starter-data-redis` + `spring-boot-starter-cache`
+- `@Cacheable(value = "dashboardStats", key = "#userId")` 적용, TTL 5분
+- 값 직렬화는 JSON 방식(`GenericJacksonJsonRedisSerializer`)으로 구성해 캐시 데이터의 가독성과 유지보수성 확보
+
+**측정 결과**
+
+|항목|1차 호출 (DB)|2차 호출 (캐시 히트)|개선율|
+|---|---|---|---|
+|쿼리 개수|8개|**0개**|100%|
+|응답시간|976ms|110ms|**약 89% 감소**|
+
+## 5. 트러블슈팅
+
+- Spring Boot 4 업그레이드로 인한 패키지/클래스 변경 대응
+    - `RedisCacheManagerBuilderCustomizer` 패키지 이동(`org.springframework.boot.cache.autoconfigure`)
+    - `GenericJackson2JsonRedisSerializer` deprecated → Jackson 3 기반 `GenericJacksonJsonRedisSerializer`로 교체
+- 캐시 역직렬화 실패(`InvalidDefinitionException`) 해결: `@Builder`만 사용하던 응답 DTO에 기본 생성자(`@NoArgsConstructor`)와 `@Setter`를 추가해 Jackson이 캐시된 JSON으로부터 객체를 재구성할 수 있도록 함
+- 측정/시드 데이터 생성용 테스트가 일반 테스트와 충돌하지 않도록 Gradle 설정에서 별도 패키지로 분리(`exclude '**/seed/**'`)
 
 ### 4. Map.of() null 값으로 인한 NullPointerException
 

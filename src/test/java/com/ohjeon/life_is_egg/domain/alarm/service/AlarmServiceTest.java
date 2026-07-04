@@ -12,15 +12,18 @@ import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
 import com.ohjeon.life_is_egg.domain.cheer.dto.CheerCreateRequest;
 import com.ohjeon.life_is_egg.domain.cheer.repository.CheerRepository;
 import com.ohjeon.life_is_egg.domain.cheer.service.CheerService;
+import com.ohjeon.life_is_egg.domain.goal.repository.GoalRepository;
 import com.ohjeon.life_is_egg.domain.post.entity.Post;
 import com.ohjeon.life_is_egg.domain.post.entity.Visibility;
 import com.ohjeon.life_is_egg.domain.post.repository.PostRepository;
+import com.ohjeon.life_is_egg.domain.schedule.repository.ScheduleRepository;
 import jakarta.transaction.Transactional;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.transaction.TestTransaction;
 
 @SpringBootTest
 @Transactional
@@ -44,16 +47,24 @@ class AlarmServiceTest {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private GoalRepository goalRepository;
+
+    @Autowired
+    private ScheduleRepository scheduleRepository;
+
     private User postOwner;
     private User cheerWriter;
     private Post post;
 
     @BeforeEach
     void setUp() {
-        alarmRepository.deleteAll();
-        cheerRepository.deleteAll();
-        postRepository.deleteAll();
-        userRepository.deleteAll();
+        alarmRepository.deleteAllInBatch();
+        cheerRepository.deleteAllInBatch();
+        postRepository.deleteAllInBatch();
+        goalRepository.deleteAllInBatch();
+        scheduleRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
 
         postOwner = userRepository.save(User.builder()
                 .email("owner@test.com")
@@ -76,12 +87,20 @@ class AlarmServiceTest {
                 .build());
     }
 
+    // cheerService.create() 이후 AFTER_COMMIT 리스너를 강제로 실행시키기 위한 헬퍼
+    private void commitAndStartNewTransaction() {
+        TestTransaction.flagForCommit();
+        TestTransaction.end();
+        TestTransaction.start();
+    }
+
     @Test
     void 응원_작성_시_알림_생성() {
         CheerCreateRequest request = new CheerCreateRequest();
         request.setContent("응원합니다!");
 
         cheerService.create(cheerWriter.getId(), post.getUuid(), request);
+        commitAndStartNewTransaction();
 
         List<Alarm> alarms = alarmRepository.findAll();
         assertEquals(1, alarms.size());
@@ -97,6 +116,7 @@ class AlarmServiceTest {
         request = new CheerCreateRequest();
         request.setContent("응원2");
         cheerService.create(cheerWriter.getId(), post.getUuid(), request);
+        commitAndStartNewTransaction();
 
         long count = alarmService.getUnreadCount(postOwner.getId());
         assertEquals(2, count);
@@ -107,6 +127,7 @@ class AlarmServiceTest {
         CheerCreateRequest request = new CheerCreateRequest();
         request.setContent("응원합니다!");
         cheerService.create(cheerWriter.getId(), post.getUuid(), request);
+        commitAndStartNewTransaction();
 
         Long alarmId = alarmRepository.findAll().get(0).getId();
         alarmService.readAlarm(postOwner.getId(), alarmId);
@@ -120,6 +141,7 @@ class AlarmServiceTest {
         CheerCreateRequest request = new CheerCreateRequest();
         request.setContent("응원합니다!");
         cheerService.create(cheerWriter.getId(), post.getUuid(), request);
+        commitAndStartNewTransaction();
 
         Long alarmId = alarmRepository.findAll().get(0).getId();
 
@@ -136,6 +158,7 @@ class AlarmServiceTest {
         request = new CheerCreateRequest();
         request.setContent("응원2");
         cheerService.create(cheerWriter.getId(), post.getUuid(), request);
+        commitAndStartNewTransaction();
 
         List<AlarmResponse> alarms = alarmService.getAlarms(postOwner.getId());
         assertEquals(2, alarms.size());

@@ -1,4 +1,4 @@
 package com.ohjeon.life_is_egg.domain.cheer.event;
 
-public record CheerDeletedEvent() {
+public record CheerDeletedEvent(Long cheerId) {
 }

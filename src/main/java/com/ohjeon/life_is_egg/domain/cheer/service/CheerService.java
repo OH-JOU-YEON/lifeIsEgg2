@@ -1,11 +1,14 @@
 package com.ohjeon.life_is_egg.domain.cheer.service;
 
-import com.ohjeon.life_is_egg.domain.alarm.service.AlarmService;
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
 import com.ohjeon.life_is_egg.domain.cheer.dto.CheerCreateRequest;
 import com.ohjeon.life_is_egg.domain.cheer.dto.CheerResponse;
 import com.ohjeon.life_is_egg.domain.cheer.entity.Cheer;
+import com.ohjeon.life_is_egg.domain.cheer.event.CheerAlarmTarget;
+import com.ohjeon.life_is_egg.domain.cheer.event.CheerAlarmType;
+import com.ohjeon.life_is_egg.domain.cheer.event.CheerCreatedEvent;
+import com.ohjeon.life_is_egg.domain.cheer.event.CheerDeletedEvent;
 import com.ohjeon.life_is_egg.domain.cheer.repository.CheerRepository;
 import com.ohjeon.life_is_egg.domain.post.entity.Post;
 import com.ohjeon.life_is_egg.domain.post.repository.PostRepository;
@@ -14,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,16 +29,14 @@ public class CheerService {
     private final CheerRepository cheerRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private final AlarmService alarmService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    // 응원 목록 조회 (트리 구조)
     public List<CheerResponse> getCheers(String postUuid) {
         Post post = postRepository.findByUuidAndDeletedFalse(postUuid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일기입니다."));
 
         List<Cheer> cheers = cheerRepository.findByPostOrderByCreatedAtAsc(post);
 
-        // flat 리스트 → 트리 조립
         Map<Long, CheerResponse> map = new LinkedHashMap<>();
         List<CheerResponse> roots = new ArrayList<>();
 
@@ -55,7 +57,6 @@ public class CheerService {
         return roots;
     }
 
-    // 응원 작성
     @Transactional
     public void create(Long userId, String postUuid, CheerCreateRequest request) {
         User user = userRepository.findById(userId)
@@ -83,20 +84,24 @@ public class CheerService {
 
         cheerRepository.save(cheer);
 
-        // 일기 주인에게 알람 (본인이 작성한 경우 제외)
+        List<CheerAlarmTarget> targets = new ArrayList<>();
+
         if (!post.getUser().getId().equals(userId)) {
-            alarmService.createCheerAlarm(post.getUser(), post, cheer);
+            targets.add(new CheerAlarmTarget(post.getUser().getId(), CheerAlarmType.POST_CHEER));
         }
 
-        // 답글이면 부모 응원 작성자에게도 알람 (일기 주인이거나 본인이면 제외)
         if (parent != null
                 && !parent.getUser().getId().equals(post.getUser().getId())
                 && !parent.getUser().getId().equals(userId)) {
-            alarmService.createCheerAlarm(parent.getUser(), post, cheer);
+            targets.add(new CheerAlarmTarget(parent.getUser().getId(), CheerAlarmType.REPLY_CHEER));
+        }
+
+        if (!targets.isEmpty()) {
+            eventPublisher.publishEvent(
+                    new CheerCreatedEvent(targets, post.getId(), post.getUuid(), cheer.getId()));
         }
     }
 
-    // 응원 삭제
     @Transactional
     public void delete(Long userId, Long cheerId) {
         Cheer cheer = cheerRepository.findById(cheerId)
@@ -106,8 +111,8 @@ public class CheerService {
             throw new IllegalArgumentException("일기 주인만 응원을 삭제할 수 있습니다.");
         }
 
-        alarmService.deleteByCheer(cheer);
+        cheer.delete();
 
-        cheerRepository.delete(cheer);
+        eventPublisher.publishEvent(new CheerDeletedEvent(cheer.getId()));
     }
 }

@@ -108,7 +108,7 @@ public class PostService {
         }
 
         boolean isOwner = post.getUser().getId().equals(userId);
-        long cheerCount = cheerRepository.countByPost(post);
+        long cheerCount = cheerRepository.countByPostAndDeletedFalse(post);
         return new PostDetailResponse(post, isOwner, cheerCount);
     }
 

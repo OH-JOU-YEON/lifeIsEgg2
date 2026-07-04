@@ -2,19 +2,19 @@ package com.ohjeon.life_is_egg.domain.post.service;
 
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
-import com.ohjeon.life_is_egg.domain.cheer.repository.CheerRepository;
 import com.ohjeon.life_is_egg.domain.post.dto.PostCreateRequest;
 import com.ohjeon.life_is_egg.domain.post.dto.PostDetailResponse;
 import com.ohjeon.life_is_egg.domain.post.dto.PostFeedResponse;
 import com.ohjeon.life_is_egg.domain.post.dto.PostMyResponse;
 import com.ohjeon.life_is_egg.domain.post.entity.Post;
 import com.ohjeon.life_is_egg.domain.post.entity.Visibility;
+import com.ohjeon.life_is_egg.domain.post.port.CheerCountPort;
 import com.ohjeon.life_is_egg.domain.post.repository.PostRepository;
+import com.ohjeon.life_is_egg.domain.report.port.PostLookupPort;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,19 +24,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class PostService {
+public class PostService implements PostLookupPort {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
-    private final CheerRepository cheerRepository;
+    private final CheerCountPort cheerCountPort;
 
-    // 일기 작성
     @Transactional
     public void create(Long userId, PostCreateRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
 
-        // 하루 1개 제한
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = startOfDay.plusDays(1);
         long count = postRepository.countByUserAndCreatedAtBetweenAndDeletedFalse(user, startOfDay, endOfDay);
@@ -54,7 +52,6 @@ public class PostService {
         postRepository.save(post);
     }
 
-    // 내 일기 목록
     public Page<PostMyResponse> getMyPosts(Long userId, Pageable pageable) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
@@ -63,7 +60,6 @@ public class PostService {
                 .map(PostMyResponse::new);
     }
 
-    // 또래 피드
     public List<PostFeedResponse> getFeed(Long userId, List<Long> excludeIds) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
@@ -87,18 +83,13 @@ public class PostService {
         }
 
         List<Long> postIds = posts.stream().map(Post::getId).toList();
-        Map<Long, Long> cheerCountMap = cheerRepository.countByPostIds(postIds).stream()
-                .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> (Long) row[1]
-                ));
+        Map<Long, Long> cheerCountMap = cheerCountPort.countByPostIds(postIds);
 
         return posts.stream()
                 .map(post -> new PostFeedResponse(post, cheerCountMap.getOrDefault(post.getId(), 0L)))
                 .toList();
     }
 
-    // 일기 상세
     public PostDetailResponse getPost(Long userId, String uuid) {
         Post post = postRepository.findByUuidAndDeletedFalse(uuid)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일기입니다."));
@@ -108,11 +99,10 @@ public class PostService {
         }
 
         boolean isOwner = post.getUser().getId().equals(userId);
-        long cheerCount = cheerRepository.countByPost(post);
+        long cheerCount = cheerCountPort.countByPost(post);
         return new PostDetailResponse(post, isOwner, cheerCount);
     }
 
-    // 일기 수정
     @Transactional
     public void update(Long userId, String uuid, PostCreateRequest request) {
         Post post = postRepository.findByUuidAndDeletedFalse(uuid)
@@ -125,7 +115,6 @@ public class PostService {
         post.update(request.getTitle(), request.getContent(), request.getVisibility());
     }
 
-    // 일기 삭제
     @Transactional
     public void delete(Long userId, String uuid) {
         Post post = postRepository.findByUuidAndDeletedFalse(uuid)
@@ -136,5 +125,11 @@ public class PostService {
         }
 
         post.delete();
+    }
+
+    @Override
+    public Post getById(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일기입니다."));
     }
 }

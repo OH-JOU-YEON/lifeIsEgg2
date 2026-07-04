@@ -5,8 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.ohjeon.life_is_egg.domain.alarm.repository.AlarmRepository;
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
+import com.ohjeon.life_is_egg.domain.cheer.repository.CheerRepository;
 import com.ohjeon.life_is_egg.domain.post.dto.PostCreateRequest;
 import com.ohjeon.life_is_egg.domain.post.dto.PostDetailResponse;
 import com.ohjeon.life_is_egg.domain.post.dto.PostMyResponse;
@@ -35,11 +37,21 @@ class PostServiceTest {
     @Autowired
     private PostRepository postRepository;
 
+    @Autowired
+    private AlarmRepository alarmRepository;
+
+    @Autowired
+    private CheerRepository cheerRepository;
+
     private User testUser;
 
     @BeforeEach
     void setUp() {
-        userRepository.deleteAll(); // 추가
+        alarmRepository.deleteAllInBatch();
+        cheerRepository.deleteAllInBatch();
+        postRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
+
         testUser = userRepository.save(User.builder()
                 .email("test@test2.com")
                 .password("password1234")

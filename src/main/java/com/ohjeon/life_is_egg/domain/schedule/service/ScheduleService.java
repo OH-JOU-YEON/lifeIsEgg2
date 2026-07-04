@@ -2,12 +2,18 @@ package com.ohjeon.life_is_egg.domain.schedule.service;
 
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
+import com.ohjeon.life_is_egg.domain.dashboard.dto.DashboardStatsResponse.CategoryTimeStats;
+import com.ohjeon.life_is_egg.domain.dashboard.port.DashboardMetricContributor;
+import com.ohjeon.life_is_egg.domain.dashboard.support.DashboardMetricsContext;
 import com.ohjeon.life_is_egg.domain.schedule.dto.ScheduleCreateRequest;
 import com.ohjeon.life_is_egg.domain.schedule.dto.ScheduleResponse;
 import com.ohjeon.life_is_egg.domain.schedule.entity.Schedule;
 import com.ohjeon.life_is_egg.domain.schedule.repository.ScheduleRepository;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -89,5 +95,27 @@ public class ScheduleService {
         }
 
         scheduleRepository.delete(schedule);
+    }
+
+    @Component
+    @RequiredArgsConstructor
+    public static class ScheduleDashboardContributor implements DashboardMetricContributor {
+
+        private final ScheduleRepository scheduleRepository;
+
+        @Override
+        public void contribute(User user, LocalDate today, DashboardMetricsContext context) {
+            LocalDateTime since = LocalDateTime.now().minusDays(7);
+
+            List<Object[]> categoryTimeRaw = scheduleRepository.findCategoryTimeSince(user.getId(), since);
+            List<CategoryTimeStats> categoryTime = categoryTimeRaw.stream()
+                    .map(row -> new CategoryTimeStats(
+                            (String) row[0],
+                            ((Number) row[1]).doubleValue()
+                    ))
+                    .toList();
+
+            context.setCategoryTime(categoryTime);
+        }
     }
 }

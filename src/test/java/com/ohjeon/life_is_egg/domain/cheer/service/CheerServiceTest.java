@@ -3,6 +3,7 @@ package com.ohjeon.life_is_egg.domain.cheer.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.ohjeon.life_is_egg.domain.alarm.repository.AlarmRepository;
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
@@ -54,12 +55,13 @@ class CheerServiceTest {
 
     @BeforeEach
     void setUp() {
-        alarmRepository.deleteAll();
-        cheerRepository.deleteAll();
-        postRepository.deleteAll();
-        goalRepository.deleteAll();      // 추가
-        scheduleRepository.deleteAll();
-        userRepository.deleteAll();
+
+        alarmRepository.deleteAllInBatch();
+        cheerRepository.deleteAllInBatch();
+        postRepository.deleteAllInBatch();
+        goalRepository.deleteAllInBatch();
+        scheduleRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
 
         postOwner = userRepository.save(User.builder()
                 .email("owner@test.com")
@@ -150,7 +152,9 @@ class CheerServiceTest {
         Long cheerId = cheerRepository.findAll().get(0).getId();
         cheerService.delete(postOwner.getId(), cheerId);
 
-        assertEquals(0, cheerRepository.findAll().size());
+        Cheer cheer = cheerRepository.findById(cheerId).get();
+        assertTrue(cheer.isDeleted());
+        assertEquals(1, cheerRepository.findAll().size()); // 행은 그대로 존재
     }
 
     @Test
@@ -163,5 +167,27 @@ class CheerServiceTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> cheerService.delete(cheerWriter.getId(), cheerId));
+    }
+
+    @Test
+    void 답글_있는_응원_삭제_시_소프트_삭제만_되고_답글은_유지() {
+        CheerCreateRequest rootRequest = new CheerCreateRequest();
+        rootRequest.setContent("루트 응원");
+        cheerService.create(cheerWriter.getId(), post.getUuid(), rootRequest);
+
+        Cheer root = cheerRepository.findAll().get(0);
+
+        CheerCreateRequest replyRequest = new CheerCreateRequest();
+        replyRequest.setContent("답글입니다");
+        replyRequest.setParentId(root.getId());
+        cheerService.create(cheerWriter.getId(), post.getUuid(), replyRequest);
+
+        cheerService.delete(postOwner.getId(), root.getId());
+
+        List<CheerResponse> result = cheerService.getCheers(post.getUuid());
+        assertEquals(1, result.size());
+        assertTrue(result.get(0).isDeleted());
+        assertEquals("삭제된 응원입니다", result.get(0).getContent());
+        assertEquals(1, result.get(0).getChildren().size()); // 답글은 그대로 살아있음
     }
 }

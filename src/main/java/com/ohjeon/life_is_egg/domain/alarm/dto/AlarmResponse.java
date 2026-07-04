@@ -17,10 +17,10 @@ public class AlarmResponse {
 
     public AlarmResponse(Alarm alarm) {
         this.id = alarm.getId();
-        this.postUuid = alarm.getPost() != null ? alarm.getPost().getUuid() : null;
+        this.postUuid = alarm.getPostUuid();
         this.content = alarm.getContent();
-        this.postId = alarm.getPost() != null ? alarm.getPost().getId() : null;
-        this.cheerId = alarm.getCheer() != null ? alarm.getCheer().getId() : null;
+        this.postId = alarm.getPostId();
+        this.cheerId = alarm.getCheerId();
         this.isRead = alarm.isRead();
         this.createdAt = alarm.getCreatedAt();
     }

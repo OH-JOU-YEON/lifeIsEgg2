@@ -50,6 +50,9 @@ public class Cheer {
     @Column(nullable = false, unique = true, length = 36)
     private String uuid;
 
+    @Column(name = "is_deleted", nullable = false)
+    private boolean deleted = false;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;
@@ -61,5 +64,9 @@ public class Cheer {
         this.parent = parent;
         this.content = content;
         this.uuid = UUID.randomUUID().toString();
+    }
+
+    public void delete() {
+        this.deleted = true;
     }
 }

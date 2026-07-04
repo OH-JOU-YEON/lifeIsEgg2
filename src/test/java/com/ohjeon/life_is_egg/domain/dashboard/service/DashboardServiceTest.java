@@ -3,6 +3,7 @@ package com.ohjeon.life_is_egg.domain.dashboard.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
+import com.ohjeon.life_is_egg.domain.alarm.repository.AlarmRepository;
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
 import com.ohjeon.life_is_egg.domain.cheer.entity.Cheer;
@@ -24,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
+@SpringBootTest(properties = "spring.cache.type=none")
 @Transactional
 class DashboardServiceTest {
 
@@ -41,6 +42,9 @@ class DashboardServiceTest {
     private ScheduleRepository scheduleRepository;
 
     @Autowired
+    private AlarmRepository alarmRepository;
+
+    @Autowired
     private PostRepository postRepository;
 
     @Autowired
@@ -50,11 +54,12 @@ class DashboardServiceTest {
 
     @BeforeEach
     void setUp() {
-        cheerRepository.deleteAll();
-        postRepository.deleteAll();
-        scheduleRepository.deleteAll();
-        goalRepository.deleteAll();
-        userRepository.deleteAll();
+        alarmRepository.deleteAllInBatch();
+        cheerRepository.deleteAllInBatch();
+        postRepository.deleteAllInBatch();
+        scheduleRepository.deleteAllInBatch();
+        goalRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
 
         user = userRepository.save(User.builder()
                 .email("test@test2.com")

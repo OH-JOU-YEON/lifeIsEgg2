@@ -11,11 +11,13 @@ import com.ohjeon.life_is_egg.domain.cheer.event.CheerCreatedEvent;
 import com.ohjeon.life_is_egg.domain.cheer.event.CheerDeletedEvent;
 import com.ohjeon.life_is_egg.domain.cheer.repository.CheerRepository;
 import com.ohjeon.life_is_egg.domain.post.entity.Post;
+import com.ohjeon.life_is_egg.domain.post.port.CheerCountPort;
 import com.ohjeon.life_is_egg.domain.post.repository.PostRepository;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -24,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class CheerService {
+public class CheerService implements CheerCountPort {
 
     private final CheerRepository cheerRepository;
     private final PostRepository postRepository;
@@ -114,5 +116,19 @@ public class CheerService {
         cheer.delete();
 
         eventPublisher.publishEvent(new CheerDeletedEvent(cheer.getId()));
+    }
+
+    @Override
+    public Map<Long, Long> countByPostIds(List<Long> postIds) {
+        return cheerRepository.countByPostIds(postIds).stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+    }
+
+    @Override
+    public long countByPost(Post post) {
+        return cheerRepository.countByPostAndDeletedFalse(post);
     }
 }

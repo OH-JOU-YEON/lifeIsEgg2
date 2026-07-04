@@ -77,12 +77,6 @@
 | CI/CD | GitHub Actions |
 | HTTPS | Let's Encrypt |
 
----
-
-## 🗄️ ERD
-
-<img width="1687" height="915" alt="Copy of Untitled Diagram" src="https://github.com/user-attachments/assets/dc32fb05-5866-4c2d-9130-6382ad9d69d0" />
-
 
 ---
 
@@ -244,3 +238,68 @@ API base URL이 코드에 하드코딩되어 배포 환경에서도 로컬 주�
 - `frontend/.env.production`에 `VITE_API_BASE_URL` 추가
 - nginx `/api/` 프록시 설정에서 `/api` prefix 제거 후 백엔드로 전달
 - `.env.production` 경로에서 중복 `/api` 제거 (별도 핫픽스)
+
+---
+
+## 🔧 DDD-lite 리팩터링 (2026.07.03 ~ 07.04)
+
+## 한 줄 요약
+
+응원(Cheer)-알림(Alarm) 간 직접 의존과 여러 도메인 서비스가 타 도메인 Repository를 직접 참조하던 구조를 이벤트/포트/전략 패턴으로 분리해, 새 도메인 추가 시 기존 서비스 코드를 수정하지 않아도 되는 구조로 전환했다.
+
+---
+
+## 1. 배경
+
+- 팀 프로젝트(DevCourse) 진행 전, 자기 관리 서비스에 타이머 등 새 도메인을 추가할 계획을 세우면서 현재 구조를 점검
+- `CheerService`가 `AlarmService`를 직접 호출, `PostService`/`ReportService`/`DashboardService`가 다른 도메인의 Repository를 직접 주입받는 패턴을 확인
+- 애그리거트 경계를 기준으로 "같은 트랜잭션 안에서 불변식을 공유해야 하는 관계가 있는가"를 먼저 판별 → 없다는 결론에 따라, 쓰기 경로는 이벤트로, 읽기/검증 경로는 DIP 포트로 분리하는 방향 확정
+
+## 2. Cheer → Alarm 이벤트 기반 분리
+
+**Before**
+```java
+// CheerService.create()
+alarmService.createCheerAlarm(post.getUser(), post, cheer);
+```
+
+**After**
+```java
+eventPublisher.publishEvent(new CheerCreatedEvent(targets, post.getId(), post.getUuid(), cheer.getId()));
+```
+
+- `CheerCreatedEvent`/`CheerDeletedEvent` 도입, `AlarmService`가 `@TransactionalEventListener(phase = AFTER_COMMIT, propagation = REQUIRES_NEW)`로 구독
+- 알림 생성 실패가 응원 작성 트랜잭션에 영향을 주지 않도록 분리
+- `Alarm` 엔티티가 `Cheer`/`Post` 엔티티 참조 대신 `postId`/`postUuid`/`cheerId`를 직접 보유하도록 변경해, Alarm 도메인이 다른 도메인 엔티티를 몰라도 되게 함
+
+## 3. DIP 포트 적용
+
+| 기존 | 변경 |
+|---|---|
+| `PostService` → `CheerRepository` 직접 참조 | `PostService` → `CheerCountPort` (Post가 정의, Cheer가 구현) |
+| `ReportService` → `PostRepository`/`CheerRepository` 직접 참조 | `ReportService` → `PostLookupPort`/`CheerLookupPort` |
+
+## 4. Dashboard 전략 패턴 적용
+
+- `DashboardService`가 Goal/Schedule/Post/Cheer 4개 Repository를 직접 참조하던 구조를 `DashboardMetricContributor` 인터페이스로 전환
+- 각 도메인이 자기 패키지에 Contributor 구현체를 두고, `DashboardService`는 `List<DashboardMetricContributor>`를 순회만 함
+- 새 도메인 추가 시 `DashboardService` 코드 수정 없이 Contributor 구현체 하나만 추가하면 되는 구조로 전환
+
+## 5. 트러블슈팅
+
+**답글 있는 응원 삭제 시 FK 제약 위반**
+
+- 증상: 답글이 달린 응원(부모)을 삭제하면 `cheers.parent_id → cheers.id` FK 제약 위반으로 삭제 실패
+- 원인: 하드 삭제 구조에서 자식 응원이 참조 중인 부모 행을 삭제 시도
+- 해결: 소프트 삭제로 전환 (`Cheer.deleted` 필드 추가). 삭제 시 내용은 "삭제된 응원입니다"로 대체하고 답글은 유지
+
+**`@TransactionalEventListener` + `@Transactional` 조합 오류**
+
+- 증상: `@TransactionalEventListener(AFTER_COMMIT)` 메서드에 기본 `@Transactional`을 붙이면 애플리케이션 구동 자체가 실패
+- 원인: 원본 트랜잭션이 이미 종료된 시점에 실행되는 리스너이므로 `REQUIRED`(기본값)로는 합류할 트랜잭션이 없음
+- 해결: `@Transactional(propagation = Propagation.REQUIRES_NEW)`로 명시
+
+**운영 DB 스키마 반영**
+
+- 운영 환경은 `ddl-auto` 미설정(기본값 `none`)으로 스키마 자동 반영이 안 되는 구조
+- `Alarm.postUuid`, `Cheer.deleted` 등 신규 컬럼을 배포 전 수동 마이그레이션(`ALTER TABLE` + 기존 데이터 백필)으로 반영

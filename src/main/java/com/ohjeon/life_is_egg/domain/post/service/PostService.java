@@ -10,6 +10,7 @@ import com.ohjeon.life_is_egg.domain.post.entity.Post;
 import com.ohjeon.life_is_egg.domain.post.entity.Visibility;
 import com.ohjeon.life_is_egg.domain.post.port.CheerCountPort;
 import com.ohjeon.life_is_egg.domain.post.repository.PostRepository;
+import com.ohjeon.life_is_egg.domain.report.port.PostLookupPort;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class PostService {
+public class PostService implements PostLookupPort {
 
     private final PostRepository postRepository;
     private final UserRepository userRepository;
@@ -124,5 +125,11 @@ public class PostService {
         }
 
         post.delete();
+    }
+
+    @Override
+    public Post getById(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 일기입니다."));
     }
 }

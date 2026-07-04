@@ -13,6 +13,7 @@ import com.ohjeon.life_is_egg.domain.cheer.repository.CheerRepository;
 import com.ohjeon.life_is_egg.domain.post.entity.Post;
 import com.ohjeon.life_is_egg.domain.post.port.CheerCountPort;
 import com.ohjeon.life_is_egg.domain.post.repository.PostRepository;
+import com.ohjeon.life_is_egg.domain.report.port.CheerLookupPort;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class CheerService implements CheerCountPort {
+public class CheerService implements CheerCountPort, CheerLookupPort {
 
     private final CheerRepository cheerRepository;
     private final PostRepository postRepository;
@@ -130,5 +131,11 @@ public class CheerService implements CheerCountPort {
     @Override
     public long countByPost(Post post) {
         return cheerRepository.countByPostAndDeletedFalse(post);
+    }
+
+    @Override
+    public Cheer getById(Long cheerId) {
+        return cheerRepository.findById(cheerId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 응원입니다."));
     }
 }

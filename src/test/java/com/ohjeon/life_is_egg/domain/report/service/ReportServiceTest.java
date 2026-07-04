@@ -3,6 +3,7 @@ package com.ohjeon.life_is_egg.domain.report.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import com.ohjeon.life_is_egg.domain.alarm.repository.AlarmRepository;
 import com.ohjeon.life_is_egg.domain.auth.entity.User;
 import com.ohjeon.life_is_egg.domain.auth.repository.UserRepository;
 import com.ohjeon.life_is_egg.domain.cheer.entity.Cheer;
@@ -29,6 +30,9 @@ class ReportServiceTest {
     private ReportRepository reportRepository;
 
     @Autowired
+    private AlarmRepository alarmRepository;
+
+    @Autowired
     private PostRepository postRepository;
 
     @Autowired
@@ -44,10 +48,11 @@ class ReportServiceTest {
 
     @BeforeEach
     void setUp() {
-        reportRepository.deleteAll();
-        cheerRepository.deleteAll();
-        postRepository.deleteAll();
-        userRepository.deleteAll();
+        reportRepository.deleteAllInBatch();
+        alarmRepository.deleteAllInBatch();
+        cheerRepository.deleteAllInBatch();
+        postRepository.deleteAllInBatch();
+        userRepository.deleteAllInBatch();
 
         reporter = userRepository.save(User.builder()
                 .email("reporter@test.com")

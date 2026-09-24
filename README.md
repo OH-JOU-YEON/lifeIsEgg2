@@ -182,6 +182,11 @@ Map<Long, Long> cheerCountMap = cheerRepository.countByPostIds(postIds).stream()
 - **원인**: 원본 트랜잭션이 끝난 뒤 실행되는 리스너라 `REQUIRED`(기본값)로는 합류할 트랜잭션이 없음
 - **해결**: `@Transactional(propagation = Propagation.REQUIRES_NEW)`로 명시
 
+### 로그인 30분 후 요청 실패, 로그인 페이지로 이동하지 않음
+
+- **증상**: 액세스 토큰이 만료(30분)되면 모든 API 요청이 실패하지만, 로그인 페이지로 이동하지 않고 화면에 머무름
+- **원인**: 인증 실패 처리기가 설정되지 않아 Spring Security 기본값(`Http403ForbiddenEntryPoint`)이 403을 반환함. 프론트엔드는 401일 때만 토큰을 삭제하고 로그인 페이지로 이동하도록 되어 있어 세션 만료 처리가 동작하지 않음
+- **해결**: `AuthenticationEntryPoint`를 구현해 인증 실패 시 401과 JSON 에러 응답을 반환하도록 설정. 서버 예외 발생 시 `/error` 포워딩이 인증 실패(401)로 바뀌지 않도록 `/error` 경로도 `permitAll()`에 추가
 
 ---
 
@@ -190,6 +195,7 @@ Map<Long, Long> cheerCountMap = cheerRepository.countByPostIds(postIds).stream()
 - **대시보드 캐시 반영 지연**: 쓰기 시 캐시를 무효화하지 않아, 새 기록이 대시보드에 최대 5분 늦게 반영됩니다.
 - **알림 이벤트 유실 가능성**: `AFTER_COMMIT` 이후 알림 처리 중 서버가 종료되면 해당 알림은 유실될 수 있습니다. 현재 규모에서는 허용 범위로 판단했습니다.
 - **알림 폴링 방식**: 30초 간격 폴링으로 구현해 실시간성에 한계가 있습니다.
+- **리프레시 토큰 미구현**: 액세스 토큰 만료(30분) 시 재로그인이 필요합니다.
 
 ---
 
